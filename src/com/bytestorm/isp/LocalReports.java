@@ -21,6 +21,10 @@ public class LocalReports implements ReportsProvider {
         }                        
         // parse content of provided directory                
         for (File f : reports) {
+            // skip hidden files
+            if (f.isHidden()) {
+                continue;
+            }
             final String filename = f.getName();
             Matcher m;
             m = RE_EARNINGS_ZIP.matcher(filename);
@@ -104,7 +108,7 @@ public class LocalReports implements ReportsProvider {
     // file names regexps
     private static final Pattern RE_SALES_ZIP = Pattern.compile("^salesreport_(\\d{6})\\.zip$");
     private static final Pattern RE_EARNINGS_ZIP = Pattern.compile("^earnings_(\\d{6})_\\d{16}-\\d+\\.zip$");
-    private static final Pattern RE_CVS = Pattern.compile("^(\\p{Alpha}*)_(\\d{6})\\.zip$");
+    private static final Pattern RE_CVS = Pattern.compile("^(\\p{Alpha}*)_(\\d{6})\\.csv$");
     
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMM");
 }
