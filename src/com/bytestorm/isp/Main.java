@@ -620,6 +620,9 @@ public class Main {
         for (int i = 2; i < 2 + currencies.length + 1; i++) {
             sheet.autoSizeColumn(i);            
         }
+        
+        sheet.setRepeatingRows(CellRangeAddress.valueOf("1"));
+        sheet.setRepeatingColumns(CellRangeAddress.valueOf("A:B"));
     }    
     
     private static void createVatSheet(WorkbookStyle wb, List<Transaction> transactions) {
