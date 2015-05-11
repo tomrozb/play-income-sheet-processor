@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -23,6 +24,10 @@ import java.util.Set;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import org.apache.commons.io.IOUtils;
+import static com.google.api.client.util.IOUtils.deserialize;
+import static com.google.api.client.util.IOUtils.serialize;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -33,7 +38,6 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.IOUtils;
 import com.google.api.client.util.store.AbstractDataStore;
 import com.google.api.client.util.store.AbstractDataStoreFactory;
 import com.google.api.client.util.store.DataStore;
@@ -113,7 +117,11 @@ abstract public class GoogleClientHelper {
     final protected byte[] getUserCredentialsData() {
         byte[] userCredentialsData = getUserCredentialsDataImpl();
         if (null == userCredentialsData) {
-            userCredentialsData = loadStream(getClass().getResourceAsStream("/resources/client_secret.json"));           
+            try {
+                return IOUtils.toByteArray(getClass().getResource("/resources/client_secret.json"));
+            } catch (Throwable e) {
+                // cannot load client secret from resources, skip silently
+            }           
         }
         return userCredentialsData;
     }
@@ -121,45 +129,15 @@ abstract public class GoogleClientHelper {
     final protected ServiceCredentialsData getServiceCredentialsData() {
         ServiceCredentialsData serviceCredentialsData = getServiceCredentialsDataImpl();
         if (null == serviceCredentialsData) {
-            byte[] pcks = loadStream(getClass().getResourceAsStream("/resources/service_key.p12"));
-            byte[] email = loadStream(getClass().getResourceAsStream("/resources/service_email"));
-            if (null != pcks && null != email) {                
-                try {
-                    String emailStr = new String(email, "utf-8");
-                    if (!emailStr.isEmpty()) {
-                        serviceCredentialsData = new ServiceCredentialsData(pcks, emailStr);
-                    }
-                } catch (UnsupportedEncodingException e) {
-                    // should not happens
-                    e.printStackTrace();
-                }                
-            }                    
+            try {
+                return new ServiceCredentialsData(IOUtils.toByteArray(getClass().getResource("/resources/service_key.p12")), 
+                        IOUtils.toString(getClass().getResource("/resources/service_email"), Charset.forName("utf-8")));
+            } catch (Throwable e) {
+                // cannot load service creditentials from resources, skip silently
+            }                
         }
         return serviceCredentialsData;
-    }    
-    
-    final protected byte[] loadStream(InputStream in) {
-        if (null != in) {
-            try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                byte[] buffer = new byte[64 * 1024];
-                int read;
-                while ((read = in.read(buffer)) >= 0) {            
-                    out.write(buffer, 0, read);
-                }
-                return out.toByteArray();
-            } catch (IOException ex) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-        }
-        return null;
     }
-
     
     /**
      * 
@@ -248,7 +226,7 @@ abstract public class GoogleClientHelper {
 
         @Override
         public V get(String key) throws IOException {
-            return IOUtils.deserialize(prefs.getByteArray(key, null));
+            return deserialize(prefs.getByteArray(key, null));
         }
 
         @Override
@@ -263,7 +241,7 @@ abstract public class GoogleClientHelper {
         @Override
         public DataStore<V> set(String key, V value) throws IOException {
             try {
-                prefs.putByteArray(key, IOUtils.serialize(value));
+                prefs.putByteArray(key, serialize(value));
                 prefs.sync();
                 return this;
             } catch (BackingStoreException e) {
@@ -276,7 +254,7 @@ abstract public class GoogleClientHelper {
             try {
                 ArrayList<V> retval = new ArrayList<>();
                 for (String key : prefs.keys()) {
-                    retval.add(IOUtils.deserialize(prefs.getByteArray(key, null)));
+                    retval.add(deserialize(prefs.getByteArray(key, null)));
                 }
                 return retval;
             } catch (BackingStoreException e) {
