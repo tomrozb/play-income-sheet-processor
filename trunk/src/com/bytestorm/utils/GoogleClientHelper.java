@@ -214,9 +214,7 @@ abstract public class GoogleClientHelper {
             throw new Error("Cannot initialize PKCS12 key store");
         } catch (NoSuchAlgorithmException e) {
             throw new Error("Cannot load P12 key");
-        } catch (CertificateException e) {
-            throw new IllegalArgumentException("Invalid P12 key file");
-        } catch (UnrecoverableKeyException e) {
+        } catch (CertificateException | UnrecoverableKeyException e) {
             throw new IllegalArgumentException("Invalid P12 key file");
         }
     }
