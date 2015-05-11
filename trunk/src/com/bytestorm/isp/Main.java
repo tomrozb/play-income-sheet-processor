@@ -55,13 +55,14 @@ public class Main {
         options.addOption(null, "no-overwrite", false, "prevents output file overwrite");
         options.addOption(null, "gcs-bucket", true, "GCS bucked for Play reports");
         options.addOption(null, "gcs-client-secret", true, "Google API client secret json file");
+        options.addOption(null, "gcs-force-auth", true, "Logouts user from google API forcing authorization flow, ignored in local mode");
         options.addOption(null, "gcs-service-cert", true, "Google API service account access cert PK12 file");
         options.addOption(null, "gcs-service-email", true, "Google API service account e-mail address");        
+        options.addOption(null, "gcs-keep-reports", false, "keep download CSV reports, ignored in local mode");        
         options.addOption(null, "no-xchange-sheet", false, "disables xchange sheet output (no xchange data will be fetched)");
         options.addOption(null, "no-summary-sheet", false, "disables summary sheet output");
         options.addOption(null, "no-vat-sheet", false, "disables vat sheet output");
         options.addOption(null, "no-vat", false, "disables VAT data processing (sales reports will not be used, implies no-vat-sheet)");
-        options.addOption(null, "keep-reports", false, "keep download CSV reports, this switch is ignored in local mode");
         options.addOption(null, "process-tax-reports", false, "process tax only records");
         help.setWidth(80);
         try {            
@@ -141,7 +142,13 @@ public class Main {
                     DateTime dt = new DateTime().minusMonths(1);
                     date = dt.toDate();
                 }
-                reports = new GCSReports(config, date, cli.hasOption("keep-reports"));                
+                if (cli.hasOption("gcs-keep-reports")) {
+                    config.setBoolean(GCSReports.KEEP_REPORTS, true);
+                }
+                if (cli.hasOption("gcs-force-auth")) {
+                    config.setBoolean(GCSReports.FORCE_AUTHORIZATION, true);
+                }
+                reports = new GCSReports(config, date);                
             } else {                     
                 reports = new LocalReports(reportsDir);
             }
