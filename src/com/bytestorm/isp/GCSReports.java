@@ -28,8 +28,10 @@ import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
 
 public class GCSReports extends GoogleClientHelper implements ReportsProvider {
+    public static final String KEEP_REPORTS = "gcs.reports.keep";
+    public static final String FORCE_AUTHORIZATION = "gcs.force.auth";
 
-    public GCSReports(Configuration cfg, Date date, boolean keepReports) throws IOException, IllegalArgumentException {
+    public GCSReports(Configuration cfg, Date date) throws IOException, IllegalArgumentException {
         config = cfg;
         if (null == cfg.getProperty("gcs.reports.bucket")) {
             if (DEFAULT_BUCKET.equals("<PLAY_BUCKET>")) {
@@ -37,6 +39,9 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
             } else {
                 cfg.put("gcs.reports.bucket", DEFAULT_BUCKET);
             }
+        }
+        if (cfg.getBoolean(FORCE_AUTHORIZATION, false)) {
+            logout();
         }
         Credential credential  = authorize(GCS_SCOPES);
         Log.v("Client authorized");
@@ -52,7 +57,7 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
         }
         downloadAll(client, "sales/salesreport_" + DATE_FORMAT.format(this.date.toDate()), salesReports);
         downloadAll(client, "sales/salesreport_" + DATE_FORMAT.format(this.date.plusMonths(1).toDate()), salesReports);
-        if (keepReports) {
+        if (cfg.getBoolean(KEEP_REPORTS, false)) {
             Log.v("Saving downloaded CSV files");
             // resolve collisions
             HashMap<String, ArrayList<File>> collisions = new HashMap<>();
