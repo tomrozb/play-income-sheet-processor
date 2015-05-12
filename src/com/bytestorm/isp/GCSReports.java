@@ -3,8 +3,6 @@ package com.bytestorm.isp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -16,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 
 import com.bytestorm.utils.GoogleClientHelper;
@@ -43,7 +42,7 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
         if (cfg.getBoolean(FORCE_AUTHORIZATION, false)) {
             logout();
         }
-        Credential credential  = authorize(GCS_SCOPES);
+        Credential credential  = authorize(SCOPES);
         Log.v("Client authorized");
         // storage client
         this.bucket = cfg.getProperty("gcs.reports.bucket");
@@ -129,15 +128,9 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
     protected byte[] getUserCredentialsDataImpl() {
         if (null != config.getProperty("gcs.client.secret.json.path")) {            
             try {
-                byte[] creds = loadStream(new FileInputStream(config.getProperty("gcs.client.secret.json.path")));
-                if (null != creds) {
-                    Log.v("Connecting to GCS using user credential");
-                    return creds;
-                } else {
-                    Log.v("Unable to load client secret from " + config.getProperty("gcs.client.secret.json.path"));       
-                }
-            } catch (FileNotFoundException e) {
-                Log.v("Client secret path is invalid " + config.getProperty("gcs.client.secret.json.path"));
+                return IOUtils.toByteArray(new File(config.getProperty("gcs.client.secret.json.path")).toURI());                
+            } catch (Throwable e) {
+                Log.v("Cannot load client secret from " + config.getProperty("gcs.client.secret.json.path") + " " + e);
             }            
         }
         return null;
@@ -145,21 +138,12 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
 
     @Override    
     protected ServiceCredentialsData getServiceCredentialsDataImpl() {
-        if (null != config.getProperty("gcs.service.pk12.path")) {
-            if (null != config.getProperty("gcs.service.email")) {
-                try {
-                    byte[] pcks = loadStream(new FileInputStream(config.getProperty("gcs.service.cert.pk12.path")));
-                    if (null != pcks) {
-                        Log.v("Connecting to GCS using service account credential");
-                        return  new ServiceCredentialsData(pcks, config.getProperty("gcs.service.email"));                    
-                    } else {
-                        Log.v("Unable to load PC12 from " + config.getProperty("gcs.service.cert.pk12.path"));
-                    }
-                } catch (FileNotFoundException e) {
-                    Log.v("PC12 path is invalid " + config.getProperty("gcs.service.cert.pk12.path"));
-                }                
-            } else {
-                Log.v("PK12 path configured but service e-mail address missing");
+        if (null != config.getProperty("gcs.service.pk12.path") && null != config.getProperty("gcs.service.email")) {
+            try {
+                return new ServiceCredentialsData(IOUtils.toByteArray(new File(config.getProperty("gcs.service.cert.pk12.path")).toURI()),
+                        config.getProperty("gcs.service.email"));
+            } catch (Throwable e) {
+                Log.v("Cannot load PC12 from " + config.getProperty("gcs.service.cert.pk12.path") + " " + e);                    
             }
         }
         return null;
@@ -172,11 +156,11 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
     private ArrayList<File> salesReports = new ArrayList<>();
     private HashMap<File, String> mapping = new HashMap<>();
     
-    private static final String DEFAULT_BUCKET = "<PLAY_BUCKET>";
-    
-    private static final String APP_NAME = "Bytestorm-ISP/1.0";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMM");
     
-    private static final Collection<String> GCS_SCOPES = Collections.singleton(StorageScopes.DEVSTORAGE_READ_ONLY);   
+    private static final String DEFAULT_BUCKET = "<PLAY_BUCKET>";         
+   
+    private static final String APP_NAME = "Bytestorm-ISP/1.0";
+    private static final Collection<String> SCOPES = Collections.singleton(StorageScopes.DEVSTORAGE_READ_ONLY);   
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();        
 }

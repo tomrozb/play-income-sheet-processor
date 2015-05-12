@@ -41,7 +41,7 @@ import com.bytestorm.isp.WorkbookStyle.FontType;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         final HelpFormatter help = new HelpFormatter();
         final Options options = new Options();
         final CommandLineParser parser = new PosixParser();
