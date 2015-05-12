@@ -14,10 +14,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 
 import com.bytestorm.utils.GoogleClientHelper;
+import com.bytestorm.utils.Log;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -71,8 +73,8 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
             for (Map.Entry<String, ArrayList<File>> entry : collisions.entrySet()) {
                 if (entry.getValue().size() > 1) {
                     // colliding filename found
-                    String name = Utils.splitFileName(entry.getKey())[0];
-                    String ext = Utils.splitFileName(entry.getKey())[1];                    
+                    String name = FilenameUtils.getBaseName(entry.getKey());
+                    String ext = FilenameUtils.getExtension(entry.getKey());                    
                     int n = 1;
                     for (File f : entry.getValue()) {
                         mapping.put(f, name + " (" + (n++) + ")" + ext);
@@ -100,29 +102,7 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
     @Override
     public Date getDate() {
         return date.toDate();
-    }
-    
-    private void downloadAll(Storage client, String prefix, ArrayList<File> out) throws IOException {
-        Storage.Objects.List list = client.objects().list(bucket);
-        list.setPrefix(prefix);
-        Objects earningsReportsObjects = list.execute();        
-        for (StorageObject obj : earningsReportsObjects.getItems()) {
-            out.add(downloadAndUnpack(client, obj));
-        }
-    }
-    
-    private File downloadAndUnpack(Storage client, StorageObject file) throws IOException {
-        Log.v("Downloading storage file " + file.getName());
-        String fileName = file.getName();
-        Storage.Objects.Get getObject = client.objects().get(bucket, fileName);
-        ByteArrayOutputStream data = new ByteArrayOutputStream();
-        getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true);
-        getObject.executeMediaAndDownloadTo(data);
-        File out = File.createTempFile("tmp", ".csv");
-        String origName = Utils.unpack(new ByteArrayInputStream(data.toByteArray()), out);
-        mapping.put(out, origName);
-        return out;
-    }
+    }    
     
     @Override
     protected byte[] getUserCredentialsDataImpl() {
@@ -147,6 +127,28 @@ public class GCSReports extends GoogleClientHelper implements ReportsProvider {
             }
         }
         return null;
+    }
+    
+    private void downloadAll(Storage client, String prefix, ArrayList<File> out) throws IOException {
+        Storage.Objects.List list = client.objects().list(bucket);
+        list.setPrefix(prefix);
+        Objects earningsReportsObjects = list.execute();        
+        for (StorageObject obj : earningsReportsObjects.getItems()) {
+            out.add(downloadAndUnpack(client, obj));
+        }
+    }
+    
+    private File downloadAndUnpack(Storage client, StorageObject file) throws IOException {
+        Log.v("Downloading storage file " + file.getName());
+        String fileName = file.getName();
+        Storage.Objects.Get getObject = client.objects().get(bucket, fileName);
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
+        getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+        getObject.executeMediaAndDownloadTo(data);
+        File out = File.createTempFile("tmp", ".csv");
+        String origName = ZipUtils.unpack(new ByteArrayInputStream(data.toByteArray()), out);
+        mapping.put(out, origName);
+        return out;
     }
     
     private Configuration config;

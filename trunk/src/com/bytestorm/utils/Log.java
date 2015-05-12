@@ -1,4 +1,4 @@
-package com.bytestorm.isp;
+package com.bytestorm.utils;
 
 public class Log {
     public static final boolean ENABLE = true;

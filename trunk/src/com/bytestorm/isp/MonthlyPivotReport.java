@@ -11,6 +11,8 @@ import java.util.TreeSet;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.bytestorm.utils.Log;
+
 /**
  * Date to currency pivot report.
  */

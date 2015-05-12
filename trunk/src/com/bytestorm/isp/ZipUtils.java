@@ -10,7 +10,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-public class Utils {
+public class ZipUtils {
     
     public static String unpack(File zipFile, File outFile) throws IOException {
         try (ZipFile zip = new ZipFile(zipFile)) {
@@ -55,14 +55,6 @@ public class Utils {
         }
     }
     
-    public static String[] splitFileName(String fileName) {
-        int extPos = fileName.lastIndexOf('.'); 
-        if (extPos > 0) {
-            return new String[] { fileName.substring(0, extPos), fileName.substring(extPos) };                        
-        }
-        return new String[] { fileName, "" };
-    }
-    
-    private Utils() {
+    private ZipUtils() {
     }
 }
