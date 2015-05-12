@@ -1,8 +1,6 @@
 package com.bytestorm.utils;
 import org.mortbay.log.Logger;
 
-import com.bytestorm.isp.Log;
-
 public class SimpleJettyLogger implements Logger {
 
     public SimpleJettyLogger() {

@@ -29,6 +29,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.bytestorm.utils.Log;
+
 public class Exchange {
     
     public static class Quote {

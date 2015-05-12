@@ -31,14 +31,14 @@ public class LocalReports implements ReportsProvider {
             if (m.matches()) {
                 date = checkDates(date, m.group(1));
                 final File earningReportCsv = File.createTempFile("earnings", ".csv");
-                Utils.unpack(f, earningReportCsv);
+                ZipUtils.unpack(f, earningReportCsv);
                 earningsReports.add(earningReportCsv);
                 continue;
             }
             m = RE_SALES_ZIP.matcher(filename); 
             if (m.matches()) {
                 final File salesReportCsv = File.createTempFile("sales", ".csv");
-                Utils.unpack(f, salesReportCsv);
+                ZipUtils.unpack(f, salesReportCsv);
                 salesReports.add(salesReportCsv);
                 continue;
             }
