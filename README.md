@@ -13,11 +13,19 @@ Aimed for Polish developers (since it uses official Polish exchange provider) co
 Data can be provided locally or fetched directly from Google Cloud Storage bucket through Google GCS API (either using user credential through OAuth2 or using authorized service, see below for details).
 
 
+Build
+===============
+
+```
+gradlew fatJar
+```
+
+
 Usage 
 ===============
-Assuming application was compiled to runnable jar named isp.jar
+Assuming application was compiled to runnable jar named play-income-sheet-processor-all.jar
 ```
-java -jar isp.jar [OPTIONS]...
+java -jar build/libs/play-income-sheet-processor-all.jar [OPTIONS]...
 ```
 
 **OPTIONS**
